@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: spring-kafka-stack-learning
+
+  kafka:
+    consumer:
+      auto-offset-reset: earliest
