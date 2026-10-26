@@ -1,5 +1,6 @@
 package dev.danvega.kafka.greeting;
 
+import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -101,5 +102,19 @@ public class GreetingTest {
         assertEquals("test user", greeting.from());
         assertEquals("Hello world", greeting.message());
         assertNotNull(greeting.sentAt());
+    }
+
+    @Test
+    void shouldSerializeAndDeserializeGreeting() {
+        // Arrange
+        JsonMapper jsonMapper = new JsonMapper();
+        Greeting original = Greeting.of("John", "Hello!");
+
+        // Act
+        String json = jsonMapper.writeValueAsString(original);
+        Greeting restored = jsonMapper.readValue(json, Greeting.class);
+
+        // Assert
+        assertEquals(original, restored);
     }
 }

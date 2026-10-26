@@ -1,6 +1,7 @@
 package dev.danvega.kafka.greeting;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 public record Greeting(String from, String message, Instant sentAt ) {
 
@@ -29,6 +30,6 @@ public record Greeting(String from, String message, Instant sentAt ) {
     }
 
     public static Greeting of(String from, String message) {
-        return new Greeting(from, message, Instant.now());
+        return new Greeting(from, message, Instant.now().truncatedTo(ChronoUnit.SECONDS));
     }
 }

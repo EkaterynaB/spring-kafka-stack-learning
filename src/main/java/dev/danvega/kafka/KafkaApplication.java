@@ -1,5 +1,6 @@
 package dev.danvega.kafka;
 
+import dev.danvega.kafka.greeting.Greeting;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
@@ -8,11 +9,17 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.KafkaTemplate;
+import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootApplication
 public class KafkaApplication {
+    private final JsonMapper jsonMapper;
 
-	public static void main(String[] args) {
+    public KafkaApplication(JsonMapper jsonMapper) {
+        this.jsonMapper = jsonMapper;
+    }
+
+    public static void main(String[] args) {
 		SpringApplication.run(KafkaApplication.class, args);
 	}
 
@@ -53,5 +60,28 @@ public class KafkaApplication {
     @KafkaListener(topics = "myTestTopic", groupId = "testDemo")
     public void listenMyTestTopic(String message) {
         System.out.println("got: " + message);
+    }
+
+    @Bean
+    NewTopic greetingEventsTopic() {
+        return TopicBuilder.name("greeting-events")
+                .partitions(1)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    ApplicationRunner runnerGreetingEvents(KafkaTemplate<String, String> template) {
+        return args -> {
+            Greeting greeting = Greeting.of("John", "Hello, beautiful!");
+            String greetingOutput = jsonMapper.writeValueAsString(greeting);
+            template.send("greeting-events", greetingOutput);
+        };
+    }
+
+    @KafkaListener(topics = "greeting-events", groupId = "greetingEventId")
+    public void listenGreetingEvents(String message) {
+        Greeting greeting = jsonMapper.readValue(message, Greeting.class);
+        System.out.println("greeting: " + greeting);
     }
 }
