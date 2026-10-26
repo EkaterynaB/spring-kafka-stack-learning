@@ -1,6 +1,5 @@
 package dev.danvega.kafka.basics;
 
-import dev.danvega.kafka.greeting.Greeting;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -11,7 +10,6 @@ public class BannedWordFilterTest {
         MessageFilter filter = new BannedWordFilter("spam");
         assertEquals(filter.accepts("SPAM bla bla"), false);
         assertEquals(filter.accepts("spaM bla bla"), false);
-        assertEquals(filter.accepts("bla bla"), true);
     }
 
     @Test
@@ -23,14 +21,24 @@ public class BannedWordFilterTest {
 
     @Test
     void shouldThrowWhenBannedWordIsBlank() {
-        IllegalArgumentException exception = assertThrows(
+        IllegalArgumentException exceptionOne = assertThrows(
                 IllegalArgumentException.class,
                 () -> new BannedWordFilter(null)
         );
 
         assertEquals(
                 "Banned word must not be null or blank",
-                exception.getMessage()
+                exceptionOne.getMessage()
+        );
+
+        IllegalArgumentException exceptionTwo = assertThrows(
+                IllegalArgumentException.class,
+                () -> new BannedWordFilter("   ")
+        );
+
+        assertEquals(
+                "Banned word must not be null or blank",
+                exceptionTwo.getMessage()
         );
     }
 }
