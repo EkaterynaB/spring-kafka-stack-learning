@@ -1,5 +1,7 @@
 package dev.danvega.kafka.basics;
 
+import java.util.List;
+
 public class BasicsPlayground {
 
     static void main(String[] args) {
@@ -24,7 +26,15 @@ public class BasicsPlayground {
         System.out.println(" ???????? ");
 //        System.out.println(johnInbox.hashCode());
 
-        kateInbox.getMessages().add("hack");
+//        kateInbox.getMessages().add("hack");
         System.out.println(kateInbox.getCount());
+
+        Inbox inboxWithFilters = new Inbox("Kate", List.of((MessageFilter) message -> message != null && !message.isBlank(), new BannedWordFilter("spam")));
+        inboxWithFilters.receive("Hello!");
+        inboxWithFilters.receive("How are you?");
+        inboxWithFilters.receive("  this is spam ");
+        inboxWithFilters.receive("   ");
+        inboxWithFilters.receive("See you tomorrow!");
+        System.out.println(inboxWithFilters.getCount());
     }
 }
