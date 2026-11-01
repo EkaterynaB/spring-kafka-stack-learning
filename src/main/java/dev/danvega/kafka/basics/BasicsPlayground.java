@@ -1,5 +1,6 @@
 package dev.danvega.kafka.basics;
 
+import java.nio.file.Path;
 import java.util.List;
 
 public class BasicsPlayground {
@@ -36,5 +37,13 @@ public class BasicsPlayground {
         inboxWithFilters.receive("   ");
         inboxWithFilters.receive("See you tomorrow!");
         System.out.println(inboxWithFilters.getCount());
+
+        PostOffice postOffice = new PostOffice();
+
+        postOffice.deliver("Kate", "Hello");
+        postOffice.deliver("Kate", "Learning Java");
+        postOffice.deliver("Kate", "Kafka is interesting");
+
+        postOffice.archive("Kate", Path.of("kate-messages-test.txt"));
     }
 }

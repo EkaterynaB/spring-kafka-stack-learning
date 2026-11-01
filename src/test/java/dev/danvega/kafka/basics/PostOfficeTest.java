@@ -1,6 +1,13 @@
 package dev.danvega.kafka.basics;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -67,5 +74,84 @@ public class PostOfficeTest {
 
         assertNull(postOffice.getInbox("Kate"));
         assertEquals(0, postOffice.totalMessages());
+    }
+
+    @Test
+    public void deliverAllMessages() {
+        PostOffice postOffice = new PostOffice();
+        int rejectedCount = postOffice.deliverAll("Kate", List.of("Hello", "   ", "Kate"));
+        assertEquals(1, rejectedCount);
+        Inbox inbox = postOffice.getInbox("Kate");
+        assertEquals(2, inbox.getCount());
+    }
+
+    @Test
+    public void deliverAllInvalidMessages() {
+        PostOffice postOffice = new PostOffice();
+        int rejectedCount = postOffice.deliverAll("Kate", List.of("   ", "   ", "   "));
+        assertEquals(3, rejectedCount);
+        Inbox inbox = postOffice.getInbox("Kate");
+        assertNull(inbox);
+    }
+
+    @Test
+    public void notDeliverInvalidMessages() {
+        PostOffice postOffice = new PostOffice();
+        postOffice.deliver("Kate", "Hello");
+        assertEquals(1, postOffice.getInbox("Kate").getCount());
+        postOffice.deliverAll("Kate", List.of("   "));
+        assertEquals(1, postOffice.getInbox("Kate").getCount());
+    }
+
+    @Test
+    void testArchivePositiveScenarios(@TempDir Path tempDir) throws IOException {
+        PostOffice postOffice = new PostOffice();
+
+        postOffice.deliver("Kate", "Hello");
+        postOffice.deliver("Kate", "How are you?");
+        Path file = tempDir.resolve("archive.txt");
+        postOffice.archive("Kate", file);
+
+        assertTrue(Files.exists(file));
+        assertEquals(
+                List.of("Hello", "How are you?"),
+                Files.readAllLines(file)
+        );
+    }
+
+    @Test
+    void archiveThrowsWhenOwnerDoesNotExist(@TempDir Path tempDir) {
+        PostOffice postOffice = new PostOffice();
+        Path file = tempDir.resolve("archive.txt");
+
+        ArchiveException exception = assertThrows(
+                ArchiveException.class,
+                () -> postOffice.archive("Unknown", file)
+        );
+
+        assertEquals(
+                "Inbox not found for owner: Unknown",
+                exception.getMessage()
+        );
+
+        assertNull(exception.getCause());
+        assertFalse(Files.exists(file));
+    }
+
+    @Test
+    void archiveWrapsIOExceptionWhenWritingFails(@TempDir Path tempDir) {
+        PostOffice postOffice = new PostOffice();
+        postOffice.deliver("Kate", "Hello");
+
+        Path missingDirectory = tempDir.resolve("missing");
+        Path file = missingDirectory.resolve("archive.txt");
+
+        ArchiveException exception = assertThrows(
+                ArchiveException.class,
+                () -> postOffice.archive("Kate", file)
+        );
+
+        assertInstanceOf(IOException.class, exception.getCause());
+        assertFalse(Files.exists(file));
     }
 }

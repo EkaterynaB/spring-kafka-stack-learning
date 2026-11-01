@@ -26,6 +26,14 @@ public class Inbox {
         messages.add(message);
     }
 
+    public void receiveStrict(String message) {
+        MessageFilter rejectedBy = findRejectingFilter(message);
+        if (rejectedBy != null) {
+            throw new InvalidMessageException("Message rejected by: " + rejectedBy.getClass().getSimpleName());
+        }
+        messages.add(message);
+    }
+
     public String getOwner() {
         return owner;
     }
@@ -60,13 +68,17 @@ public class Inbox {
         return Objects.hashCode(owner);
     }
 
-    public boolean isValidMessage(String message) {
+    private MessageFilter findRejectingFilter(String message) {
         for (MessageFilter filter : filters) {
             if (!filter.accepts(message)) {
-                return false;
+                return filter;
             }
-        };
+        }
 
-        return true;
+        return null;
+    }
+
+    public boolean isValidMessage(String message) {
+        return findRejectingFilter(message) == null;
     }
 }

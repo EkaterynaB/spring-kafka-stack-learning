@@ -1,6 +1,10 @@
 package dev.danvega.kafka.basics;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class PostOffice {
@@ -30,5 +34,47 @@ public class PostOffice {
             total += inbox.getCount();
         }
         return total;
+    }
+
+    
+    public void archive(String owner, Path filePath) throws ArchiveException {
+        Inbox inbox = getInbox(owner);
+        // owner does not exist
+        if (inbox == null) {
+            throw new ArchiveException("Inbox not found for owner: " + owner);
+        }
+
+        // without try catch I get this error - Unhandled exception: java.io.IOException
+        // without catch java: unreported exception java.io.IOException; must be caught or declared to be thrown
+        try {
+            List<String> messages = inbox.getMessages();
+            Files.write(filePath, messages);
+        }
+        catch (IOException e) {
+            throw new ArchiveException(e.getMessage(), e);
+        }
+
+    }
+
+    public int deliverAll(String owner, List<String> messages) {
+        int rejectedCount = 0;
+        for (String message : messages) {
+            try {
+                Inbox inbox = getInbox(owner);
+                boolean isNewInbox = inbox == null;
+
+                if (isNewInbox) {
+                    inbox = new Inbox(owner);
+                }
+                inbox.receiveStrict(message);
+                if (isNewInbox) {
+                    boxes.put(owner, inbox);
+                }
+            } catch (InvalidMessageException e) {
+                rejectedCount += 1;
+            }
+        }
+
+        return rejectedCount;
     }
 }

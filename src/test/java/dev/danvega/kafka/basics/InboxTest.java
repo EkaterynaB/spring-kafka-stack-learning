@@ -169,4 +169,61 @@ public class InboxTest {
 
         assertEquals(List.of("Hello", "Bye"), inbox.getMessages());
     }
+
+    @Test
+    void testReceiveStrict() {
+        Inbox inbox = new Inbox("Kate", List.of(
+                new NotBlankFilter(),
+                new MaxLengthFilter(10),
+                new BannedWordFilter("spam")
+        ));
+        InvalidMessageException exception = assertThrows(
+                InvalidMessageException.class,
+                () -> inbox.receiveStrict("  ")
+        );
+        assertTrue(
+                exception.getMessage().contains("NotBlankFilter")
+        );
+
+        InvalidMessageException exceptionTwo = assertThrows(
+                InvalidMessageException.class,
+                () -> inbox.receiveStrict("bla bla bla bla bla")
+        );
+        assertTrue(
+                exceptionTwo.getMessage().contains("MaxLengthFilter")
+        );
+
+        InvalidMessageException exceptionThree = assertThrows(
+                InvalidMessageException.class,
+                () -> inbox.receiveStrict("bla spam")
+        );
+        assertTrue(
+                exceptionThree.getMessage().contains("BannedWordFilter")
+        );
+    }
+
+    @Test
+    void testReceiveStrictWithDefaultFilters() {
+        Inbox inbox = new Inbox("Kate");
+        inbox.receiveStrict("Hello");
+        assertEquals(List.of("Hello"), inbox.getMessages());
+        assertEquals("Hello", inbox.getLastMessage());
+    }
+
+    @Test
+    void testInvalidMessageDoesNotChangeTheLastMessage() {
+        Inbox inbox = new Inbox("Kate");
+        inbox.receiveStrict("Hello");
+        InvalidMessageException exception = assertThrows(
+                InvalidMessageException.class,
+                () -> inbox.receiveStrict("   ")
+        );
+        assertTrue(
+                exception.getMessage().contains("NotBlankFilter")
+        );
+
+        assertEquals(List.of("Hello"), inbox.getMessages());
+        assertEquals("Hello", inbox.getLastMessage());
+        assertEquals(1, inbox.getCount());
+    }
 }
