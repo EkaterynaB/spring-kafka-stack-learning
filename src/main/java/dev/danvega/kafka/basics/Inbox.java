@@ -81,4 +81,14 @@ public class Inbox {
     public boolean isValidMessage(String message) {
         return findRejectingFilter(message) == null;
     }
+
+    public List<String> search(String word) {
+        if (word == null) return List.of();
+        if (word.isBlank()) {return List.copyOf(messages);}
+        return messages.stream().filter(m -> m.toLowerCase().contains(word.toLowerCase())).toList();
+    }
+
+    public long countLongerThan(int length) {
+        return messages.stream().filter(m -> m.length() > length).count();
+    }
 }

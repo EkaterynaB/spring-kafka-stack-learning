@@ -154,4 +154,29 @@ public class PostOfficeTest {
         assertInstanceOf(IOException.class, exception.getCause());
         assertFalse(Files.exists(file));
     }
+
+    @Test
+    void testActiveOwners() {
+        PostOffice postOffice = new PostOffice();
+        postOffice.deliver("Kate", "Hello");
+        postOffice.deliver("Kate", "How are you?");
+        postOffice.deliver("Anna", "hi");
+        postOffice.deliver("Bob", "hey");
+        assertEquals(List.of("Anna", "Bob", "Kate"), postOffice.activeOwners());
+    }
+
+    @Test
+    void anyInboxContainsWords() {
+        PostOffice postOffice = new PostOffice();
+        postOffice.deliver("Kate", "Hello");
+        postOffice.deliver("Kate", "How are you?");
+        postOffice.deliver("Bob", "What is your name?");
+        Inbox inbox = postOffice.getInbox("Kate");
+        assertEquals(List.of("Hello", "How are you?"), inbox.getMessages());
+        assertTrue(postOffice.anyInboxContains("Hello"));
+        assertTrue(postOffice.anyInboxContains("hello"));
+        assertTrue(postOffice.anyInboxContains("name"));
+        assertFalse(postOffice.anyInboxContains("names"));
+        assertFalse(postOffice.anyInboxContains(null));
+    }
 }

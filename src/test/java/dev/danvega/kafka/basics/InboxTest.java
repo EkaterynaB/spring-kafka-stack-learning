@@ -226,4 +226,34 @@ public class InboxTest {
         assertEquals("Hello", inbox.getLastMessage());
         assertEquals(1, inbox.getCount());
     }
+
+    @Test
+    void searchString() {
+        Inbox inbox = new Inbox("Kate");
+        inbox.receive("Hello");
+        inbox.receive("How are you?");
+        inbox.receive("Goodbye");
+        assertEquals(List.of("Hello", "How are you?"), inbox.search("h"));
+        assertEquals(List.of("Hello"), inbox.search("hel"));
+        assertEquals(List.of("Hello", "How are you?", "Goodbye"), inbox.search(""));
+        assertEquals(List.of(), inbox.search(null));
+        assertEquals(List.of("Hello"), inbox.search("HELL"));
+        assertEquals(List.of(), inbox.search("hola"));
+
+        assertThrows(
+                UnsupportedOperationException.class,
+                () -> inbox.search("").add("hack")
+        );
+        assertEquals(3, inbox.getCount());
+    }
+
+    @Test
+    void countLongerThan() {
+        Inbox inbox = new Inbox("Kate");
+        inbox.receive("Hello");
+        inbox.receive("Goodbye");
+        assertEquals(2, inbox.countLongerThan(4));
+        assertEquals(0, inbox.countLongerThan(7));
+    }
+
 }

@@ -28,12 +28,9 @@ public class PostOffice {
     }
 
     public int totalMessages() {
-        int total = 0;
-
-        for (Inbox inbox : boxes.values()) {
-            total += inbox.getCount();
-        }
-        return total;
+        return boxes.values().stream()
+            .mapToInt(Inbox::getCount)
+            .sum();
     }
 
     
@@ -76,5 +73,20 @@ public class PostOffice {
         }
 
         return rejectedCount;
+    }
+
+    public List<String> activeOwners() {
+        return boxes.entrySet()
+            .stream()
+            .filter(entry -> entry.getValue().getCount() > 0)
+            .map(Map.Entry::getKey)
+            .sorted()
+            .toList();
+    }
+
+    public boolean anyInboxContains(String word) {
+        return boxes.values()
+            .stream()
+            .anyMatch(inbox -> !inbox.search(word).isEmpty());
     }
 }
