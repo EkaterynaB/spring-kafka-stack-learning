@@ -2,6 +2,7 @@ package dev.danvega.kafka.basics;
 
 import org.junit.jupiter.api.Test;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -256,4 +257,16 @@ public class InboxTest {
         assertEquals(0, inbox.countLongerThan(7));
     }
 
+
+    @Test
+    void findLastMessage() {
+        Inbox inbox = new Inbox("Kate");
+        Optional<String> result = inbox.findLastMessage();
+        assertTrue(result.isEmpty());
+        inbox.receive("Hello");
+        inbox.receive("How are you?");
+        inbox.receive("What's news?");
+        inbox.receive("Goodbye");
+        assertEquals(Optional.of("Goodbye"), inbox.findLastMessage());
+    }
 }

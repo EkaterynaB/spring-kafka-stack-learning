@@ -3,6 +3,7 @@ package dev.danvega.kafka.basics;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.List;
+import java.util.Optional;
 
 public class Inbox {
     private final String owner;
@@ -27,10 +28,11 @@ public class Inbox {
     }
 
     public void receiveStrict(String message) {
-        MessageFilter rejectedBy = findRejectingFilter(message);
-        if (rejectedBy != null) {
-            throw new InvalidMessageException("Message rejected by: " + rejectedBy.getClass().getSimpleName());
-        }
+        Optional<MessageFilter> rejectedBy = findRejectingFilter(message);
+        rejectedBy.ifPresent((value) -> {
+            throw new InvalidMessageException("Message rejected by: " + value.getClass().getSimpleName());
+        });
+
         messages.add(message);
     }
 
@@ -68,18 +70,14 @@ public class Inbox {
         return Objects.hashCode(owner);
     }
 
-    private MessageFilter findRejectingFilter(String message) {
-        for (MessageFilter filter : filters) {
-            if (!filter.accepts(message)) {
-                return filter;
-            }
-        }
-
-        return null;
+    private Optional<MessageFilter> findRejectingFilter(String message) {
+        return filters.stream()
+            .filter(filter -> !filter.accepts(message))
+            .findFirst();
     }
 
     public boolean isValidMessage(String message) {
-        return findRejectingFilter(message) == null;
+        return findRejectingFilter(message).isEmpty();
     }
 
     public List<String> search(String word) {
@@ -90,5 +88,13 @@ public class Inbox {
 
     public long countLongerThan(int length) {
         return messages.stream().filter(m -> m.length() > length).count();
+    }
+
+    public Optional<String> findLastMessage() {
+        if (messages.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(messages.getLast());
     }
 }

@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class PostOffice {
     private final Map<String,Inbox> boxes = new HashMap<>();
@@ -35,11 +36,7 @@ public class PostOffice {
 
     
     public void archive(String owner, Path filePath) throws ArchiveException {
-        Inbox inbox = getInbox(owner);
-        // owner does not exist
-        if (inbox == null) {
-            throw new ArchiveException("Inbox not found for owner: " + owner);
-        }
+        Inbox inbox = findInbox(owner).orElseThrow(() -> new ArchiveException("Inbox not found for owner: " + owner));
 
         // without try catch I get this error - Unhandled exception: java.io.IOException
         // without catch java: unreported exception java.io.IOException; must be caught or declared to be thrown
@@ -50,7 +47,6 @@ public class PostOffice {
         catch (IOException e) {
             throw new ArchiveException(e.getMessage(), e);
         }
-
     }
 
     public int deliverAll(String owner, List<String> messages) {
@@ -88,5 +84,14 @@ public class PostOffice {
         return boxes.values()
             .stream()
             .anyMatch(inbox -> !inbox.search(word).isEmpty());
+    }
+
+    public Optional<Inbox> findInbox(String owner) {
+        return Optional.ofNullable(boxes.get(owner));
+    }
+
+    public Optional<String> lastMessageOf(String owner) {
+        return findInbox(owner)
+                .flatMap(Inbox::findLastMessage);
     }
 }

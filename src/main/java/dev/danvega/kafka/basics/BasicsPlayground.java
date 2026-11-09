@@ -45,8 +45,6 @@ public class BasicsPlayground {
         postOffice.deliver("Kate", "Learning Java");
         postOffice.deliver("Kate", "Kafka is interesting");
 
-//        postOffice.archive("Kate", Path.of("kate-messages-test.txt"));
-
 //        will be an empty output since filter is intermediate operation
         Stream<String> stream = Stream.of("Alice", "Bob", "Kate")
                 .filter(name -> {

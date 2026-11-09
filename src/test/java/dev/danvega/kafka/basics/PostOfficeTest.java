@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -178,5 +179,65 @@ public class PostOfficeTest {
         assertTrue(postOffice.anyInboxContains("name"));
         assertFalse(postOffice.anyInboxContains("names"));
         assertFalse(postOffice.anyInboxContains(null));
+    }
+
+    @Test
+    void findInboxReturnCorrectInbox() {
+        PostOffice postOffice = new PostOffice();
+        assertEquals(Optional.empty(), postOffice.findInbox("Kate"));
+        postOffice.deliver("Kate", "Hello");
+        postOffice.deliver("Kate", "How are you?");
+        postOffice.deliver("Bob", "Hey");
+        Inbox inbox = postOffice.getInbox("Kate");
+        assertEquals(List.of("Hello", "How are you?"), inbox.getMessages());
+        assertTrue(postOffice.findInbox("Kate").isPresent());
+        assertTrue(postOffice.findInbox("Bob").isPresent());
+        assertEquals(
+                Optional.of("Kate"),
+                postOffice.findInbox("Kate").map(Inbox::getOwner)
+        );
+    }
+
+    @Test
+    void returnCorrectLastMessageOf() {
+        PostOffice postOffice = new PostOffice();
+        postOffice.deliver("Kate", "Hello");
+        postOffice.deliver("Kate", "How are you?");
+        postOffice.deliver("Bob", "What is your name?");
+        assertEquals(Optional.of("How are you?"), postOffice.lastMessageOf("Kate"));
+        assertEquals(Optional.of("What is your name?"), postOffice.lastMessageOf("Bob"));
+        assertEquals(Optional.empty(), postOffice.lastMessageOf("Katty"));
+    }
+
+    private String createDefault() {
+        System.out.println("computing default");
+        return "Default message";
+    }
+
+    @Test
+    void compareOrElseAndOrElseGet() {
+        Optional<String> optional = Optional.of("Hello");
+
+        // Prediction:
+        // "computing default" will be printed once.
+
+        System.out.println("Before orElse");
+        String result1 = optional.orElse(createDefault());
+
+        System.out.println("Before orElseGet");
+        String result2 = optional.orElseGet(() -> createDefault());
+
+        assertEquals("Hello", result1);
+        assertEquals("Hello", result2);
+
+        // Actual result:
+        // "computing default" was printed once, during orElse().
+
+        // Explanation:
+        // orElse() evaluates its argument before the method is called,
+        // so createDefault() runs even when Optional contains a value.
+        // orElseGet() uses a Supplier, which is only executed when
+        // Optional is empty. Since Optional contains "Hello",
+        // createDefault() is not called a second time.
     }
 }
