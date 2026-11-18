@@ -52,18 +52,9 @@ public class PostOffice {
     public int deliverAll(String owner, List<String> messages) {
         int rejectedCount = 0;
         for (String message : messages) {
-            try {
-                Inbox inbox = getInbox(owner);
-                boolean isNewInbox = inbox == null;
+            DeliveryStatus deliveryStatus = tryDeliver(owner, message);
 
-                if (isNewInbox) {
-                    inbox = new Inbox(owner);
-                }
-                inbox.receiveStrict(message);
-                if (isNewInbox) {
-                    boxes.put(owner, inbox);
-                }
-            } catch (InvalidMessageException e) {
+            if (deliveryStatus == DeliveryStatus.REJECTED) {
                 rejectedCount += 1;
             }
         }
@@ -93,5 +84,35 @@ public class PostOffice {
     public Optional<String> lastMessageOf(String owner) {
         return findInbox(owner)
                 .flatMap(Inbox::findLastMessage);
+    }
+
+    public DeliveryStatus tryDeliver(String owner, String message) {
+        Inbox inbox = getInbox(owner);
+        boolean isNewInbox = inbox == null;
+
+        if (isNewInbox) {
+            inbox = new Inbox(owner);
+        }
+
+        try {
+            inbox.receiveStrict(message);
+
+            if (isNewInbox) {
+                boxes.put(owner, inbox);
+                return DeliveryStatus.DELIVERED_NEW_INBOX;
+            }
+
+            return DeliveryStatus.DELIVERED;
+        } catch (InvalidMessageException e) {
+            return DeliveryStatus.REJECTED;
+        }
+    }
+
+    public String describe(DeliveryStatus status) {
+        return switch (status) {
+            case DELIVERED -> "delivered";
+            case REJECTED -> "rejected";
+            case DELIVERED_NEW_INBOX -> "delivered new inbox";
+        };
     }
 }

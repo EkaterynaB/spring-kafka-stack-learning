@@ -257,7 +257,6 @@ public class InboxTest {
         assertEquals(0, inbox.countLongerThan(7));
     }
 
-
     @Test
     void findLastMessage() {
         Inbox inbox = new Inbox("Kate");
@@ -268,5 +267,28 @@ public class InboxTest {
         inbox.receive("What's news?");
         inbox.receive("Goodbye");
         assertEquals(Optional.of("Goodbye"), inbox.findLastMessage());
+    }
+
+    @Test
+    void shouldCountMessagesByPriority() {
+        Inbox inbox = new Inbox("Kate");
+
+        inbox.receive("URGENT: fix this bug");
+        inbox.receive("FYI: meeting tomorrow");
+        inbox.receive("Hello");
+        inbox.receive("This is urgent!");
+
+        assertEquals(2L, inbox.countByPriority(Priority.HIGH));
+        assertEquals(1L, inbox.countByPriority(Priority.LOW));
+        assertEquals(1L, inbox.countByPriority(Priority.NORMAL));
+    }
+
+    @Test
+    void shouldCountMessagesByPriorityForEmptyInbox() {
+        Inbox inbox = new Inbox("Kate");
+
+        assertEquals(0, inbox.countByPriority(Priority.HIGH));
+        assertEquals(0, inbox.countByPriority(Priority.LOW));
+        assertEquals(0, inbox.countByPriority(Priority.NORMAL));
     }
 }
