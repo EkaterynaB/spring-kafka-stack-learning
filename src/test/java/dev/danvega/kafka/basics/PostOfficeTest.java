@@ -240,4 +240,44 @@ public class PostOfficeTest {
         // Optional is empty. Since Optional contains "Hello",
         // createDefault() is not called a second time.
     }
+
+    @Test
+    void shouldCreateNewInboxOnFirstDelivery() {
+        PostOffice postOffice = new PostOffice();
+
+        DeliveryStatus status = postOffice.tryDeliver("Kate", "Hello");
+
+        assertEquals(DeliveryStatus.DELIVERED_NEW_INBOX, status);
+        assertNotNull(postOffice.getInbox("Kate"));
+    }
+
+    @Test
+    void shouldReturnDeliveredOnSecondMessage() {
+        PostOffice postOffice = new PostOffice();
+
+        postOffice.tryDeliver("Kate", "First message");
+
+        DeliveryStatus status = postOffice.tryDeliver("Kate", "Second message");
+
+        assertEquals(DeliveryStatus.DELIVERED, status);
+        assertEquals(2, postOffice.getInbox("Kate").getCount());
+    }
+
+    @Test
+    void shouldNotCreateInboxWhenMessageIsRejected() {
+        PostOffice postOffice = new PostOffice();
+
+        DeliveryStatus status = postOffice.tryDeliver("Kate", "");
+
+        assertEquals(DeliveryStatus.REJECTED, status);
+        assertNull(postOffice.getInbox("Kate"));
+    }
+
+    @Test
+    void describeReturnReadableLabel() {
+        PostOffice postOffice = new PostOffice();
+        assertEquals("delivered", postOffice.describe(DeliveryStatus.DELIVERED));
+        assertEquals("rejected", postOffice.describe(DeliveryStatus.REJECTED));
+        assertEquals("delivered new inbox", postOffice.describe(DeliveryStatus.DELIVERED_NEW_INBOX));
+    }
 }

@@ -1,9 +1,6 @@
 package dev.danvega.kafka.basics;
 
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class Inbox {
     private final String owner;
@@ -96,5 +93,9 @@ public class Inbox {
         }
 
         return Optional.of(messages.getLast());
+    }
+
+    public long countByPriority(Priority priority) {
+        return messages.stream().filter(message -> Priority.classify(message) == priority).count();
     }
 }
